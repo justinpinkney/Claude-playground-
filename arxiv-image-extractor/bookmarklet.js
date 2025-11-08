@@ -15,9 +15,9 @@
     const htmlUrl = `https://arxiv.org/html/${paperId}`;
     let paperTitle = '';
 
-    // Load saved Are.na config
-    const savedToken = localStorage.getItem('arenaToken') || '';
-    const savedChannel = localStorage.getItem('arenaChannel') || '';
+    // Get Are.na config - prompt if not saved
+    let arenaToken = localStorage.getItem('arenaToken');
+    let arenaChannel = localStorage.getItem('arenaChannel');
 
     // Create overlay
     const overlay = document.createElement('div');
@@ -35,20 +35,23 @@
         font-family: monospace;
     `;
 
+    let configStatus = '';
+    if (!arenaToken || !arenaChannel) {
+        configStatus = '<div style="border: 2px solid black; padding: 10px; margin-bottom: 10px; background: #ffeb3b;">⚠ Are.na not configured. Click "Configure Are.na" to set up.</div>';
+    } else {
+        configStatus = '<div style="border: 2px solid black; padding: 10px; margin-bottom: 10px; background: #c8e6c9;">✓ Are.na configured</div>';
+    }
+
     overlay.innerHTML = `
         <div style="border: 2px solid black; padding: 20px; margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h1 style="margin: 0; font-size: 24px;">arXiv Images: ${paperId}</h1>
-                <button id="close-overlay" style="padding: 10px 20px; background: black; color: white; border: 2px solid black; font-family: monospace; cursor: pointer; font-size: 14px;">Close</button>
-            </div>
-            <div style="border-top: 2px solid black; padding-top: 15px; margin-bottom: 10px;">
-                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">Are.na Configuration</div>
-                <div style="display: flex; gap: 10px; margin-bottom: 5px;">
-                    <input id="arena-token" type="text" placeholder="Are.na API Token" value="${savedToken}" autocomplete="off" spellcheck="false" tabindex="1" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace; background: white; cursor: text;">
-                    <input id="arena-channel" type="text" placeholder="Channel Slug" value="${savedChannel}" autocomplete="off" spellcheck="false" tabindex="2" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace; background: white; cursor: text;">
+                <div style="display: flex; gap: 10px;">
+                    <button id="config-arena" style="padding: 10px 20px; background: black; color: white; border: 2px solid black; font-family: monospace; cursor: pointer; font-size: 14px;">Configure Are.na</button>
+                    <button id="close-overlay" style="padding: 10px 20px; background: black; color: white; border: 2px solid black; font-family: monospace; cursor: pointer; font-size: 14px;">Close</button>
                 </div>
-                <div style="font-size: 12px;">Get your token from https://are.na/settings/applications</div>
             </div>
+            ${configStatus}
             <div id="status" style="margin-top: 10px; font-size: 12px;">Loading...</div>
         </div>
         <div id="image-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;"></div>
@@ -58,39 +61,34 @@
 
     const statusEl = overlay.querySelector('#status');
     const gridEl = overlay.querySelector('#image-grid');
-    const tokenInput = overlay.querySelector('#arena-token');
-    const channelInput = overlay.querySelector('#arena-channel');
-
-    // Ensure inputs are fully editable
-    tokenInput.readOnly = false;
-    channelInput.readOnly = false;
-    tokenInput.disabled = false;
-    channelInput.disabled = false;
-
-    // Save config to localStorage on change
-    tokenInput.addEventListener('input', () => localStorage.setItem('arenaToken', tokenInput.value));
-    channelInput.addEventListener('input', () => localStorage.setItem('arenaChannel', channelInput.value));
-
-    // Add click handler to ensure focus works
-    tokenInput.addEventListener('click', (e) => {
-        e.stopPropagation();
-        tokenInput.focus();
-    });
-    channelInput.addEventListener('click', (e) => {
-        e.stopPropagation();
-        channelInput.focus();
-    });
 
     // Close button
     overlay.querySelector('#close-overlay').onclick = () => overlay.remove();
 
+    // Configure button
+    overlay.querySelector('#config-arena').onclick = () => {
+        const token = prompt('Enter your Are.na API token:\n(Get it from https://are.na/settings/applications)', arenaToken || '');
+        if (token !== null) {
+            arenaToken = token.trim();
+            localStorage.setItem('arenaToken', arenaToken);
+        }
+
+        const channel = prompt('Enter your Are.na channel slug:\n(e.g., "my-arxiv-images")', arenaChannel || '');
+        if (channel !== null) {
+            arenaChannel = channel.trim();
+            localStorage.setItem('arenaChannel', arenaChannel);
+        }
+
+        if (arenaToken && arenaChannel) {
+            alert('Are.na configured successfully! You can now add images to your channel.');
+            location.reload(); // Refresh to show updated status
+        }
+    };
+
     // Function to add image to Are.na
     async function addToArena(imageUrl, filename, button) {
-        const token = tokenInput.value.trim();
-        const channel = channelInput.value.trim();
-
-        if (!token || !channel) {
-            alert('Please configure your Are.na token and channel slug first');
+        if (!arenaToken || !arenaChannel) {
+            alert('Please configure your Are.na token and channel first.\nClick "Configure Are.na" button.');
             return;
         }
 
