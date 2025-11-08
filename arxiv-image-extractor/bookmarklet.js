@@ -44,8 +44,8 @@
             <div style="border-top: 2px solid black; padding-top: 15px; margin-bottom: 10px;">
                 <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">Are.na Configuration</div>
                 <div style="display: flex; gap: 10px; margin-bottom: 5px;">
-                    <input id="arena-token" type="text" placeholder="Are.na API Token" value="${savedToken}" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace;">
-                    <input id="arena-channel" type="text" placeholder="Channel Slug" value="${savedChannel}" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace;">
+                    <input id="arena-token" type="text" placeholder="Are.na API Token" value="${savedToken}" autocomplete="off" spellcheck="false" tabindex="1" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace; background: white; cursor: text;">
+                    <input id="arena-channel" type="text" placeholder="Channel Slug" value="${savedChannel}" autocomplete="off" spellcheck="false" tabindex="2" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace; background: white; cursor: text;">
                 </div>
                 <div style="font-size: 12px;">Get your token from https://are.na/settings/applications</div>
             </div>
