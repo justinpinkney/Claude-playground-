@@ -9,6 +9,9 @@ let minified = source
     .replace(/^\s*\/\/.*$/gm, '')
     // Remove multi-line comments
     .replace(/\/\*[\s\S]*?\*\//g, '')
+    // Remove inline comments (// after code, but not in URLs)
+    // Match space(s) + // + rest of line, but only when // is not preceded by : or /
+    .replace(/(?<![:\/])\s+\/\/[^\n]*$/gm, '')
     // Remove empty lines
     .replace(/^\s*\n/gm, '')
     // Remove leading whitespace from each line
