@@ -61,9 +61,25 @@
     const tokenInput = overlay.querySelector('#arena-token');
     const channelInput = overlay.querySelector('#arena-channel');
 
+    // Ensure inputs are fully editable
+    tokenInput.readOnly = false;
+    channelInput.readOnly = false;
+    tokenInput.disabled = false;
+    channelInput.disabled = false;
+
     // Save config to localStorage on change
     tokenInput.addEventListener('input', () => localStorage.setItem('arenaToken', tokenInput.value));
     channelInput.addEventListener('input', () => localStorage.setItem('arenaChannel', channelInput.value));
+
+    // Add click handler to ensure focus works
+    tokenInput.addEventListener('click', (e) => {
+        e.stopPropagation();
+        tokenInput.focus();
+    });
+    channelInput.addEventListener('click', (e) => {
+        e.stopPropagation();
+        channelInput.focus();
+    });
 
     // Close button
     overlay.querySelector('#close-overlay').onclick = () => overlay.remove();
