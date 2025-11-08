@@ -284,7 +284,8 @@
                 const basePath = baseUrl.pathname.substring(0, baseUrl.pathname.lastIndexOf('/'));
 
                 images.forEach((img, index) => {
-                    let src = img.src || img.getAttribute('src');
+                    // Use getAttribute to get raw src before browser resolves it
+                    let src = img.getAttribute('src');
                     if (!src) return;
 
                     // Convert relative URLs to absolute
