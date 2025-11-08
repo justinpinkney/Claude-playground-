@@ -281,7 +281,7 @@
                 // Get base URL for relative paths
                 const baseUrl = new URL(url);
                 const baseOrigin = baseUrl.origin;
-                const basePath = baseUrl.pathname.substring(0, baseUrl.pathname.lastIndexOf('/'));
+                const basePath = baseUrl.pathname; // Keep full path including paper ID
 
                 images.forEach((img, index) => {
                     // Use getAttribute to get raw src before browser resolves it
