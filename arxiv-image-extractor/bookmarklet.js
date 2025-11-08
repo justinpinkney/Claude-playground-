@@ -1,4 +1,4 @@
-// arXiv Image Extractor Bookmarklet
+// arXiv Image Extractor Bookmarklet with Are.na Integration
 // This is the readable version. See bookmarklet.html for the minified bookmarklet to drag to your bookmarks bar.
 
 (async function() {
@@ -13,6 +13,11 @@
 
     const paperId = arxivMatch[2];
     const htmlUrl = `https://arxiv.org/html/${paperId}`;
+    let paperTitle = '';
+
+    // Load saved Are.na config
+    const savedToken = localStorage.getItem('arenaToken') || '';
+    const savedChannel = localStorage.getItem('arenaChannel') || '';
 
     // Create overlay
     const overlay = document.createElement('div');
@@ -32,9 +37,17 @@
 
     overlay.innerHTML = `
         <div style="border: 2px solid black; padding: 20px; margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h1 style="margin: 0; font-size: 24px;">arXiv Images: ${paperId}</h1>
                 <button id="close-overlay" style="padding: 10px 20px; background: black; color: white; border: 2px solid black; font-family: monospace; cursor: pointer; font-size: 14px;">Close</button>
+            </div>
+            <div style="border-top: 2px solid black; padding-top: 15px; margin-bottom: 10px;">
+                <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">Are.na Configuration</div>
+                <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                    <input id="arena-token" type="text" placeholder="Are.na API Token" value="${savedToken}" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace;">
+                    <input id="arena-channel" type="text" placeholder="Channel Slug" value="${savedChannel}" style="flex: 1; padding: 8px; border: 2px solid black; font-size: 12px; font-family: monospace;">
+                </div>
+                <div style="font-size: 12px;">Get your token from https://are.na/settings/applications</div>
             </div>
             <div id="status" style="margin-top: 10px; font-size: 12px;">Loading...</div>
         </div>
@@ -45,9 +58,62 @@
 
     const statusEl = overlay.querySelector('#status');
     const gridEl = overlay.querySelector('#image-grid');
+    const tokenInput = overlay.querySelector('#arena-token');
+    const channelInput = overlay.querySelector('#arena-channel');
+
+    // Save config to localStorage on change
+    tokenInput.addEventListener('input', () => localStorage.setItem('arenaToken', tokenInput.value));
+    channelInput.addEventListener('input', () => localStorage.setItem('arenaChannel', channelInput.value));
 
     // Close button
     overlay.querySelector('#close-overlay').onclick = () => overlay.remove();
+
+    // Function to add image to Are.na
+    async function addToArena(imageUrl, filename, button) {
+        const token = tokenInput.value.trim();
+        const channel = channelInput.value.trim();
+
+        if (!token || !channel) {
+            alert('Please configure your Are.na token and channel slug first');
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = 'Adding...';
+
+        try {
+            const description = `${filename}\nFrom: ${paperTitle || 'arXiv paper'}\n${htmlUrl}`;
+
+            const response = await fetch(`https://api.are.na/v2/channels/${channel}/blocks`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    source: imageUrl,
+                    description: description
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || `HTTP ${response.status}`);
+            }
+
+            button.textContent = 'Added ✓';
+            setTimeout(() => {
+                button.disabled = false;
+                button.textContent = 'Add to Are.na';
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error adding to Are.na:', error);
+            alert(`Failed to add to Are.na: ${error.message}`);
+            button.disabled = false;
+            button.textContent = 'Add to Are.na';
+        }
+    }
 
     try {
         // Try multiple CORS proxies
@@ -82,6 +148,11 @@
         // Parse HTML
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
+
+        // Extract paper title
+        const titleEl = doc.querySelector('title') || doc.querySelector('h1.ltx_title');
+        paperTitle = titleEl ? titleEl.textContent.trim() : '';
+
         const images = doc.querySelectorAll('img');
 
         const imageData = [];
@@ -128,13 +199,17 @@
                 </div>
                 <div style="padding: 10px;">
                     <div style="font-size: 12px; word-break: break-all; margin-bottom: 10px;">${img.filename}</div>
-                    <div style="display: flex; gap: 0;">
-                        <a href="${img.src}" target="_blank" style="flex: 1; padding: 8px; text-align: center; background: black; color: white; text-decoration: none; font-size: 12px; border-right: 2px solid white;">Open</a>
-                        <a href="${img.src}" download="${img.filename}" style="flex: 1; padding: 8px; text-align: center; background: black; color: white; text-decoration: none; font-size: 12px;">Download</a>
-                    </div>
+                    <div class="image-actions" style="display: flex; gap: 0;"></div>
                 </div>
             `;
 
+            // Add Are.na button
+            const arenaBtn = document.createElement('button');
+            arenaBtn.textContent = 'Add to Are.na';
+            arenaBtn.style.cssText = 'flex: 1; padding: 8px; text-align: center; background: black; color: white; border: 2px solid black; font-size: 12px; cursor: pointer; font-family: monospace;';
+            arenaBtn.addEventListener('click', () => addToArena(img.src, img.filename, arenaBtn));
+
+            card.querySelector('.image-actions').appendChild(arenaBtn);
             gridEl.appendChild(card);
         });
 

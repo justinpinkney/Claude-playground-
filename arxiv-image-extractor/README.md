@@ -6,12 +6,12 @@ Extract and display all images from arXiv HTML papers in a grid layout.
 
 - Extract all images from any arXiv HTML page
 - Display images in a responsive grid
-- View full-size images in a new tab
-- Download individual images
+- **Add images directly to Are.na channels**
 - Automatic filtering of tiny icons
 - Minimalist brutalist design
 - Multiple CORS proxy fallbacks
 - Bookmarklet for one-click extraction on any arXiv page
+- Saves Are.na configuration in localStorage
 
 ## Usage
 
@@ -26,10 +26,14 @@ Extract and display all images from arXiv HTML papers in a grid layout.
 ### Option 2: Web Tool
 
 1. Open `index.html` in your web browser
-2. Paste an arXiv HTML URL (e.g., `https://arxiv.org/html/2510.21986v1`)
-3. Click "Extract Images" or press Enter
-4. Browse the extracted images in the grid
-5. Click "Open" to view full-size or "Download" to save locally
+2. Configure Are.na (optional):
+   - Enter your Are.na API token from https://are.na/settings/applications
+   - Enter your channel slug (e.g., `my-arxiv-images`)
+   - Configuration is saved in localStorage
+3. Paste an arXiv HTML URL (e.g., `https://arxiv.org/html/2510.21986v1`)
+4. Click "Extract Images" or press Enter
+5. Click "Add to Are.na" to post images to your configured channel
+   - Images are posted with the filename, paper title, and arXiv URL in the description
 
 ## How It Works
 
