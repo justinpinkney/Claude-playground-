@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>arXiv Image Extractor Bookmarklet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: monospace;
+            background: white;
+            padding: 40px 20px;
+            color: black;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .bookmarklet-box {
+            border: 2px solid black;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            background: #f5f5f5;
+        }
+
+        .bookmarklet-link {
+            display: inline-block;
+            padding: 15px 30px;
+            background: black;
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid black;
+            cursor: move;
+        }
+
+        .bookmarklet-link:hover {
+            background: white;
+            color: black;
+        }
+
+        ol {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border: 1px solid black;
+        }
+
+        .note {
+            border: 2px solid black;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .note strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>arXiv Image Extractor Bookmarklet</h1>
+
+        <p>Click on any arXiv page (abstract, PDF, or HTML) and instantly view all images from the paper in a grid overlay.</p>
+
+        <div class="bookmarklet-box">
+            <p style="margin-bottom: 15px; font-weight: bold;">Drag this link to your bookmarks bar:</p>
+            <a href="javascript:(async function(){const e=window.location.href.match(/arxiv\.org\/(abs|pdf|html)\/(\d+\.\d+)/);if(!e)return void alert('Please run this bookmarklet on an arXiv page');const t=e[2],n=`https://arxiv.org/html/${t}`,a=document.createElement('div');a.id='arxiv-image-overlay',a.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:999999;overflow-y:auto;padding:20px;font-family:monospace',a.innerHTML=`<div style='border:2px solid black;padding:20px;margin-bottom:20px'><div style='display:flex;justify-content:space-between;align-items:center'><h1 style='margin:0;font-size:24px'>arXiv Images: ${t}</h1><button id='close-overlay' style='padding:10px 20px;background:black;color:white;border:2px solid black;font-family:monospace;cursor:pointer;font-size:14px'>Close</button></div><div id='status' style='margin-top:10px;font-size:12px'>Loading...</div></div><div id='image-grid' style='display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px'></div>`,document.body.appendChild(a);const o=a.querySelector('#status'),r=a.querySelector('#image-grid');a.querySelector('#close-overlay').onclick=()=>a.remove();try{const e=[`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(n)}`,`https://corsproxy.io/?${encodeURIComponent(n)}`,`https://api.allorigins.win/raw?url=${encodeURIComponent(n)}`];let i=null;for(let n=0;n<e.length;n++)try{o.textContent=`Fetching images... (proxy ${n+1}/${e.length})`;const a=await fetch(e[n],{signal:AbortSignal.timeout(1e4)});if(!a.ok)throw new Error(`HTTP ${a.status}`);i=await a.text();break}catch(e){console.warn(`Proxy ${n+1} failed:`,e.message)}if(!i)throw new Error('All proxies failed');o.textContent='Parsing images...';const s=new DOMParser().parseFromString(i,'text/html').querySelectorAll('img'),l=[];s.forEach(((e,n)=>{let a=e.getAttribute('src');if(a){a.startsWith('/')?a='https://arxiv.org'+a:a.startsWith('http')||(a=`https://arxiv.org/html/${t}/`+a);const o=e.width||e.naturalWidth||0,r=e.height||e.naturalHeight||0;if(!(o<50&&r<50&&(o>0||r>0))){const e=a.split('/').pop().split('?')[0]||`image-${n+1}`;l.push({src:a,filename:e})}}}));if(0===l.length)return void(o.textContent='No images found');o.textContent=`Found ${l.length} image${1!==l.length?'s':''}`,l.forEach((e=>{const t=document.createElement('div');t.style.cssText='border:2px solid black',t.innerHTML=`<div style='width:100%;height:250px;overflow:hidden;border-bottom:2px solid black;display:flex;align-items:center;justify-content:center'><img src='${e.src}' style='max-width:100%;max-height:100%;object-fit:contain' loading='lazy'></div><div style='padding:10px'><div style='font-size:12px;word-break:break-all;margin-bottom:10px'>${e.filename}</div><div style='display:flex;gap:0'><a href='${e.src}' target='_blank' style='flex:1;padding:8px;text-align:center;background:black;color:white;text-decoration:none;font-size:12px;border-right:2px solid white'>Open</a><a href='${e.src}' download='${e.filename}' style='flex:1;padding:8px;text-align:center;background:black;color:white;text-decoration:none;font-size:12px'>Download</a></div></div>`,r.appendChild(t)}))}catch(e){o.textContent=`Error: ${e.message}`}})();" class="bookmarklet-link">arXiv Images</a>
+        </div>
+
+        <h2>Installation Instructions</h2>
+        <ol>
+            <li>Make sure your bookmarks bar is visible (press <code>Ctrl+Shift+B</code> on Windows/Linux or <code>Cmd+Shift+B</code> on Mac)</li>
+            <li>Drag the "arXiv Images" link above to your bookmarks bar</li>
+            <li>That's it! The bookmarklet is installed.</li>
+        </ol>
+
+        <h2>How to Use</h2>
+        <ol>
+            <li>Navigate to any arXiv page:
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li><code>https://arxiv.org/abs/2510.21986</code> (abstract page)</li>
+                    <li><code>https://arxiv.org/pdf/2510.21986</code> (PDF viewer)</li>
+                    <li><code>https://arxiv.org/html/2510.21986v1</code> (HTML page)</li>
+                </ul>
+            </li>
+            <li>Click the "arXiv Images" bookmark in your bookmarks bar</li>
+            <li>A full-screen overlay will appear showing all images from the paper in a grid</li>
+            <li>Click "Close" or press Escape to close the overlay</li>
+        </ol>
+
+        <div class="note">
+            <strong>Note:</strong>
+            The bookmarklet extracts images from the HTML version of arXiv papers. If a paper doesn't have an HTML version, no images will be found.
+        </div>
+
+        <h2>Features</h2>
+        <ul style="margin-left: 20px;">
+            <li>Works on abstract, PDF, and HTML arXiv pages</li>
+            <li>Displays images in a responsive grid</li>
+            <li>Open or download individual images</li>
+            <li>Automatic CORS proxy fallback</li>
+            <li>Minimalist brutalist design</li>
+            <li>No installation required - just drag and drop</li>
+        </ul>
+    </div>
+</body>
+</html>
