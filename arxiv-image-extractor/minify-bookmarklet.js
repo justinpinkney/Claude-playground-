@@ -3,18 +3,20 @@ const fs = require('fs');
 // Read the bookmarklet source
 const source = fs.readFileSync('bookmarklet.js', 'utf8');
 
-// Extract the function content (remove comments and minify)
+// Safer minification that preserves template literals and URLs
 let minified = source
-    // Remove line comments
-    .replace(/\/\/.*$/gm, '')
+    // Remove line comments (only at start of line after optional whitespace)
+    .replace(/^\s*\/\/.*$/gm, '')
     // Remove multi-line comments
     .replace(/\/\*[\s\S]*?\*\//g, '')
-    // Remove extra whitespace
-    .replace(/\s+/g, ' ')
-    // Remove spaces around operators and punctuation
-    .replace(/\s*([{}();,:])\s*/g, '$1')
-    // Remove spaces around operators
-    .replace(/\s*([=+\-*/<>!&|])\s*/g, '$1')
+    // Remove empty lines
+    .replace(/^\s*\n/gm, '')
+    // Remove leading whitespace from each line
+    .replace(/^\s+/gm, '')
+    // Replace multiple spaces with single space
+    .replace(/ +/g, ' ')
+    // Remove newlines (replace with nothing, spaces already handled)
+    .replace(/\n/g, '')
     .trim();
 
 // URL encode for bookmarklet
