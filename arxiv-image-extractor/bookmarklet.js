@@ -81,7 +81,7 @@
 
         if (arenaToken && arenaChannel) {
             alert('Are.na configured successfully! You can now add images to your channel.');
-            location.reload(); // Refresh to show updated status
+            location.reload();
         }
     };
 
@@ -98,10 +98,10 @@
         try {
             const description = `${filename}\nFrom: ${paperTitle || 'arXiv paper'}\n${htmlUrl}`;
 
-            const response = await fetch(`https://api.are.na/v2/channels/${channel}/blocks`, {
+            const response = await fetch(`https://api.are.na/v2/channels/${arenaChannel}/blocks`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${arenaToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
