@@ -1,0 +1,13 @@
+# Core dependencies
+requests>=2.28.0
+tqdm>=4.64.0
+
+# Transcription
+openai-whisper>=20231117
+torch>=2.0.0
+
+# Optional: LLM-assisted extraction
+anthropic>=0.18.0
+
+# Data processing
+# (uses stdlib json, pathlib, etc.)
